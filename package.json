@@ -1,15 +1,21 @@
 {
-  "name": "nodejs",
+  "name": "telegram-txt-bot",
   "version": "1.0.0",
-  "description": "",
+  "description": "Telegram bot to serve .txt file chunks with premium and free access modes",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@types/node": "^22.13.11"
-  }
+    "dotenv": "^16.4.5",
+    "express": "^5.1.0",
+    "mongodb": "^6.5.0",
+    "node-fetch": "^3.3.2",
+    "node-telegram-bot-api": "^0.61.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "",
+  "license": "MIT"
 }

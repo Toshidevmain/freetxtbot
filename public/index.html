@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard - TXT Bot</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    body {
+      font-family: 'Poppins', Arial, sans-serif;
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 1.5rem 2rem;
+      background: rgba(20, 20, 30, 0.8);
+      border-radius: 16px;
+      box-shadow: 0 0 40px rgba(0, 255, 255, 0.15);
+      color: #ddd;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      user-select: none;
+    }
+    h1 {
+      text-align: center;
+      color: #00faff;
+      text-shadow: 0 0 10px #00faffaa;
+      margin-bottom: 1rem;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 12px;
+      margin-top: 1rem;
+      color: #eee;
+      font-weight: 600;
+    }
+    thead tr th {
+      background: rgba(0, 255, 255, 0.15);
+      padding: 0.8rem 0.5rem;
+      text-align: center;
+      border-radius: 12px;
+      font-size: 1rem;
+      color: #0ff;
+      text-shadow: 0 0 6px #00ffffaa;
+      user-select: none;
+    }
+    tbody tr {
+      background: rgba(255 255 255 / 0.07);
+      backdrop-filter: blur(5px);
+      border-radius: 10px;
+      transition: background-color 0.25s ease;
+    }
+    tbody tr:hover {
+      background: rgba(0, 255, 255, 0.12);
+    }
+    tbody td {
+      text-align: center;
+      padding: 0.8rem 0.5rem;
+      user-select: text;
+      font-size: 0.95rem;
+    }
+    .premium {
+      background: linear-gradient(135deg, #00ffea 0%, #0099ff 100%);
+      color: #0ff;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 14px;
+      box-shadow: 0 0 8px #00fffca0;
+      display: inline-block;
+    }
+    .normal {
+      background: linear-gradient(135deg, #ff3c3c 0%, #e60000 100%);
+      color: #ffbaba;
+      font-weight: 700;
+      padding: 0.25rem 0.8rem;
+      border-radius: 14px;
+      box-shadow: 0 0 8px #ff3c3ca0;
+      display: inline-block;
+    }
+    button {
+      padding: 0.35rem 0.7rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: #111;
+      transition: all 0.3s ease;
+      user-select: none;
+      box-shadow: 0 0 15px #00000033;
+      min-width: 110px;
+      font-family: 'Poppins', Arial, sans-serif;
+    }
+    button.premium {
+      background: linear-gradient(135deg, #00ffd6, #0099cc);
+      color: #001f25;
+      box-shadow: 0 0 15px #00ffd6cc;
+    }
+    button.normal {
+      background: linear-gradient(135deg, #ff5555, #cc0000);
+      color: #330000;
+      box-shadow: 0 0 15px #ff5555cc;
+    }
+    button.remove {
+      background: #444444cc;
+      color: #eee;
+      min-width: 80px;
+      box-shadow: 0 0 8px #444444cc;
+    }
+    button:hover {
+      filter: brightness(1.1);
+      transform: translateY(-2px);
+    }
+    #message {
+      margin-top: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffccbb;
+      min-height: 1.2rem;
+      user-select: none;
+      font-size: 1.1rem;
+    }
+    #message.error {
+      color: #ff5555;
+      text-shadow: 0 0 10px #ff5555bb;
+    }
+    #linesLeft {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      text-align: center;
+      color: #0ff;
+      text-shadow: 0 0 15px #00ffffbb;
+      user-select: none;
+    }
+    #logoutBtn {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      background: #3c9af7;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 0 12px #3c9af7bb;
+      user-select: none;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', Arial, sans-serif;
+      z-index: 9999;
+    }
+    #logoutBtn:hover {
+      filter: brightness(1.15);
+      box-shadow: 0 0 20px #3c9af7dd;
+    }
+  </style>
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+</head>
+<body>
+  <h1>Admin Dashboard - TXT Bot</h1>
+  <button id="logoutBtn">Logout</button>
+  <div id="linesLeft">Loading lines left...</div>
+  <table id="usersTable">
+    <thead>
+      <tr>
+        <th>User ID</th>
+        <th>Status</th>
+        <th>Chunks Generated</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+  <p id="message"></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    const logoutBtn = document.getElementById('logoutBtn');
+    const messageEl = document.getElementById('message');
+    let ADMIN_TOKEN = localStorage.getItem('adminToken') || null;
+    let autoRefreshInterval = null;
+
+    async function promptForToken() {
+      ADMIN_TOKEN = null;
+      localStorage.removeItem('adminToken');
+      const token = prompt('Enter admin token:');
+      if (!token) {
+        showMessage('Admin token is required. Access canceled.', true);
+        return;
+      }
+      ADMIN_TOKEN = token.trim();
+      try {
+        await fetchData(true);
+        localStorage.setItem('adminToken', ADMIN_TOKEN);
+        showMessage('Admin token accepted. Dashboard loaded.');
+        startAutoRefresh();
+      } catch (e) {
+        showMessage('Invalid admin token. Please refresh to try again.', true);
+        ADMIN_TOKEN = null;
+      }
+    }
+
+    async function fetchData(isTestToken = false) {
+      if (!ADMIN_TOKEN) throw new Error('No admin token provided');
+      const res = await fetch('/api/admin/users', {
+        headers: { 'x-admin-token': ADMIN_TOKEN }
+      });
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('Unauthorized: Invalid admin token');
+        throw new Error('Failed to fetch users');
+      }
+      const data = await res.json();
+      if (!isTestToken) {
+        document.getElementById('linesLeft').textContent = `Total Lines Left in DB: ${data.linesLeft}`;
+        const tbody = document.querySelector('#usersTable tbody');
+        tbody.innerHTML = '';
+        if (!data.users || data.users.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="4" style="color:#bbb;">No users found.</td></tr>`;
+          return;
+        }
+        data.users.forEach(user => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${user.userId}</td>
+            <td><span class="${user.isPremium ? 'premium' : 'normal'}">${user.isPremium ? 'Premium' : 'Normal'}</span></td>
+            <td>${user.chunk_id}</td>
+            <td>
+              <button class="${user.isPremium ? 'normal' : 'premium'}" data-userid="${user.userId}" data-action="togglePremium">
+                ${user.isPremium ? 'Revoke Premium' : 'Make Premium'}
+              </button>
+              <button class="remove" data-userid="${user.userId}" data-action="removeUser" style="margin-left: 0.5rem;">
+                Remove
+              </button>
+            </td>`;
+          tbody.appendChild(tr);
+        });
+      }
+      return data;
+    }
+
+    async function togglePremium(userId, makePremium) {
+      try {
+        await Swal.fire({
+          title: makePremium ? 'Granting Premium...' : 'Revoking Premium...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+        const res = await fetch(`/api/admin/user/${userId}/premium`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-admin-token': ADMIN_TOKEN
+          },
+          body: JSON.stringify({ makePremium })
+        });
+        Swal.close();
+        if (!res.ok) throw new Error('Failed to update premium status');
+        await fetchData();
+        Swal.fire({
+          icon: 'success',
+          title: 'Success',
+          text: `User ${userId} premium status updated.`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (e) {
+        Swal.close();
+        if (e.message.includes('Unauthorized')) await handleUnauthorized();
+        else Swal.fire({ icon: 'error', title: 'Error', text: e.message });
+      }
+    }
+
+    async function removeUser(userId) {
+      const confirm = await Swal.fire({
+        title: `Remove user ${userId}?`,
+        text: "This will reset their progress. Are you sure?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, remove',
+        cancelButtonText: 'Cancel'
+      });
+      if (!confirm.isConfirmed) return;
+      try {
+        await Swal.fire({
+          title: 'Removing user...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+        const res = await fetch(`/api/admin/user/${userId}/remove`, {
+          method: 'POST',
+          headers: { 'x-admin-token': ADMIN_TOKEN }
+        });
+        Swal.close();
+        if (!res.ok) throw new Error('Failed to remove user');
+        await fetchData();
+        Swal.fire({
+          icon: 'success',
+          title: 'Removed',
+          text: `User ${userId} has been removed.`,
+          timer: 2000,
+          showConfirmButton: false
+        });
+      } catch (e) {
+        Swal.close();
+        if (e.message.includes('Unauthorized')) await handleUnauthorized();
+        else Swal.fire({ icon: 'error', title: 'Error', text: e.message });
+      }
+    }
+
+    function showMessage(msg, isError = false) {
+      messageEl.textContent = msg;
+      messageEl.classList.toggle('error', isError);
+      clearTimeout(showMessage.timeout);
+      showMessage.timeout = setTimeout(() => messageEl.textContent = '', 5000);
+    }
+
+    async function handleUnauthorized() {
+      showMessage('Session expired or unauthorized. Please login again.', true);
+      clearInterval(autoRefreshInterval);
+      localStorage.removeItem('adminToken');
+      ADMIN_TOKEN = null;
+    }
+
+    document.querySelector('#usersTable').addEventListener('click', async e => {
+      if (e.target.tagName === 'BUTTON') {
+        const userId = e.target.dataset.userid;
+        const action = e.target.dataset.action;
+        if (action === 'togglePremium') {
+          const makePremium = e.target.textContent === 'Make Premium';
+          await togglePremium(userId, makePremium);
+        }
+        if (action === 'removeUser') await removeUser(userId);
+      }
+    });
+
+    logoutBtn.addEventListener('click', () => {
+      if (confirm('Logout? You will need to re-enter the admin token.')) {
+        localStorage.removeItem('adminToken');
+        ADMIN_TOKEN = null;
+        clearInterval(autoRefreshInterval);
+        showMessage('Logged out. Please refresh to login again.');
+        setTimeout(() => location.reload(), 1500);
+      }
+    });
+
+    function startAutoRefresh() {
+      if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+      autoRefreshInterval = setInterval(() => {
+        fetchData().catch(async e => {
+          if (e.message.includes('Unauthorized')) await handleUnauthorized();
+          else showMessage(e.message, true);
+        });
+      }, 15000);
+    }
+
+    (async () => {
+      if (ADMIN_TOKEN) {
+        try {
+          await fetchData();
+          showMessage('Admin token loaded from storage. Dashboard loaded.');
+          startAutoRefresh();
+        } catch (e) {
+          await handleUnauthorized();
+        }
+      } else {
+        await promptForToken();
+      }
+    })();
+  </script>
+</body>
+</html>
