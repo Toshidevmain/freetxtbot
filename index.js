@@ -64,7 +64,54 @@ function downloadFile(fileUrl) {
   });
 }
 
-bot.on('document', async (msg) => {
+bot.onText(/\/txt/, async (msg) => {
+  const userId = msg.from.id.toString();
+  const now = new Date();
+  const userData = await progressCollection.findOne({ user_id: userId }) || {};
+  const isAdmin = userId === ADMIN_ID.toString();
+  const isPremium = userData.is_premium  isAdmin  false;
+
+  if (!isPremium && userData.last_access) {
+    const lastAccess = new Date(userData.last_access);
+    const diff = now - lastAccess;
+    if (diff < 24 * 3600 * 1000) {
+      const waitMs = 24 * 3600 * 1000 - diff;
+      const waitHours = Math.floor(waitMs / (3600 * 1000));
+      const waitMinutes = Math.floor((waitMs % (3600 * 1000)) / (60 * 1000));
+      await bot.sendMessage(msg.chat.id,
+        Free users can use this once per day.\n⏳ **Try again in 0d ${waitHours}h ${waitMinutes}m**,
+        { parse_mode: 'Markdown', reply_markup: premiumInlineKeyboard() });
+      return;
+    }
+  }
+
+  const chunk = await collection.findOne({}, { sort: { chunk_id: 1 } });
+
+  if (!chunk) {
+    await bot.sendMessage(msg.chat.id, "No more text chunks available.", { parse_mode: 'Markdown' });
+    return;
+  }
+
+  const textContent = chunk.lines.join('\n');
+  const fileName = RIKUUYA-${userId}.txt;
+  const filePath = path.join('./', fileName);
+  fs.writeFileSync(filePath, textContent, 'utf8');
+  await bot.sendDocument(msg.chat.id, filePath);
+  fs.unlinkSync(filePath);
+
+  await collection.deleteOne({ chunk_id: chunk.chunk_id });
+
+  await progressCollection.updateOne(
+    { user_id: userId },
+    {
+      $set: {
+        last_access: now,
+        is_premium: isPremium
+      }
+    },
+    { upsert: true }
+  );
+});bot.on('document', async (msg) => {
   const userId = msg.from.id;
   if (userId !== ADMIN_ID || !uploadState.has(userId)) {
     await bot.sendMessage(msg.chat.id, '**Unauthorized or /upload not used.**', { parse_mode: 'Markdown' });
@@ -89,63 +136,7 @@ bot.on('document', async (msg) => {
   await bot.sendMessage(msg.chat.id, `**File uploaded successfully with ${lines.length} lines.**`, { parse_mode: 'Markdown' });
 });
 
-bot.onText(/\/txt/, async (msg) => {
-  const userId = msg.from.id.toString();
-  const now = new Date();
-  if (userId == ADMIN_ID.toString()) {
-    const userData = await progressCollection.findOne({ user_id: userId }) || {};
-    const chunkId = userData.chunk_id || 0;
-    const chunk = await collection.findOne({ chunk_id: chunkId });
-    if (!chunk) {
-      await bot.sendMessage(msg.chat.id, '**No more text chunks available.**', { parse_mode: 'Markdown' });
-      return;
-    }
-    const textContent = chunk.lines.join('\n');
-    const fileName = 'RIKUUYAFREE.txt';
-    const filePath = path.join('./', fileName);
-    fs.writeFileSync(filePath, textContent, 'utf8');
-    await bot.sendDocument(msg.chat.id, filePath);
-    fs.unlinkSync(filePath);
-    await collection.deleteOne({ chunk_id: chunkId });
-    await progressCollection.updateOne({ user_id: userId }, { $set: { chunk_id: chunkId + 1 } }, { upsert: true });
-    return;
-  }
-  const userData = await progressCollection.findOne({ user_id: userId }) || {};
-  const isPremium = userData.is_premium || false;
-  const chunkId = userData.chunk_id || 0;
-  if (!isPremium && userData.last_access) {
-    const lastAccess = new Date(userData.last_access);
-    const diff = now - lastAccess;
-    if (diff < 24 * 3600 * 1000) {
-      const waitMs = 24 * 3600 * 1000 - diff;
-      const waitHours = Math.floor(waitMs / (3600 * 1000));
-      const waitMinutes = Math.floor((waitMs % (3600 * 1000)) / (60 * 1000));
-      await bot.sendMessage(msg.chat.id,
-        `**Free users can use this once per day.**\n⏳ **Try again in 0d ${waitHours}h ${waitMinutes}m**`,
-        { parse_mode: 'Markdown', reply_markup: premiumInlineKeyboard() });
-      return;
-    }
-  }
-  const chunk = await collection.findOne({ chunk_id: chunkId });
-  if (!chunk) {
-    await bot.sendMessage(msg.chat.id, "**You've reached the end of the file.**", { parse_mode: 'Markdown' });
-    return;
-  }
-  const textContent = chunk.lines.join('\n');
-  const fileName = 'RIKUUYAFREE.txt';
-  const filePath = path.join('./', fileName);
-  fs.writeFileSync(filePath, textContent, 'utf8');
-  await bot.sendDocument(msg.chat.id, filePath);
-  fs.unlinkSync(filePath);
-  await collection.deleteOne({ chunk_id: chunkId });
-  await progressCollection.updateOne({ user_id: userId }, {
-    $set: {
-      chunk_id: chunkId + 1,
-      last_access: now,
-      is_premium: isPremium
-    }
-  }, { upsert: true });
-});
+
 
 bot.onText(/\/txtsites/, async (msg) => {
   const txtSites = `
