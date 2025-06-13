@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import https from 'https';
 
-const BOT_TOKEN = '7763399646:AAE2h_J58u8x05z161rCV44f0SDT0cdPHBc';
+const BOT_TOKEN = '7763399646:AAGYEJFEazMtr5syIPwUZteJpqqofr2J69k';
 const ADMIN_ID = 6186936436;
 const MONGO_URI = 'mongodb+srv://toshidev0:zcode22107@dbtxt.3dxoaud.mongodb.net/pyhost?retryWrites=true&w=majority';
 const ADMIN_TOKEN = 'yawara';
@@ -26,7 +26,7 @@ const uploadState = new Set();
 function premiumInlineKeyboard() {
   return {
     inline_keyboard: [
-      [{ text: '💎 Become Premium', url: 'https://t.me/YOUR_ADMIN_USERNAME' }],
+      [{ text: '💎 Become Premium', url: 'https://t.me/rikuuyas' }],
       [{ text: '⏱ Check Remaining Time', callback_data: 'check_remaining' }]
     ]
   };
@@ -35,12 +35,12 @@ function premiumInlineKeyboard() {
 bot.onText(/\/start/, async (msg) => {
   const chatId = msg.chat.id;
   const welcomeText =
-    "**Hey 𝗟𝗨𝗫 • 𝐑𝐢𝐤𝐮𝐮𝐲𝐚 ✧ 𖣂︎! 👋**\n\n" +
-    "**Welcome to the TXT Bot.**\n" +
-    "**Use /txt to get your 1k lines of text file.**\n" +
-    "**Admins can upload new files with /upload.**\n" +
-    "**Use /gettxtsites for free text sources.**\n" +
-    "**Enjoy! 🚀**";
+    "**✧ 𖣂︎**\n\n" +
+    "**𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐓𝐎 𝐑𝐈𝐊𝐔𝐔𝐘𝐀 𝐅𝐑𝐄𝐄 𝐓𝐗𝐓 𝐁𝐎𝐓**\n" +
+    "*𝐔𝐒𝐄 /txt 𝐓𝐎 𝐆𝐄𝐓 𝐘𝐎𝐔𝐑 𝐅𝐑𝐄𝐄 1𝐊 𝐋𝐈𝐍𝐄𝐒 𝐎𝐅 𝐂𝐎𝐃𝐌 𝐓𝐗𝐓 𝐋𝐈𝐍𝐄𝐒.**\n" +
+    "**𝐓𝐗𝐓 𝐈𝐒 𝐅𝐑𝐄𝐒𝐇 𝐀𝐍𝐃 𝐄𝐕𝐄𝐑𝐘𝐃𝐀𝐘 𝐈𝐒 𝐍𝐄𝐖 𝐋𝐈𝐍𝐄𝐒**\n" +
+    "**𝐀𝐕𝐀𝐈𝐋 𝐏𝐑𝐄𝐌𝐈𝐔𝐌 𝐏𝐋𝐀𝐍 𝐓𝐎 𝐇𝐀𝐕𝐄 𝐀 𝐔𝐍𝐋𝐈𝐌𝐈𝐓𝐄𝐃 𝐆𝐄𝐍𝐄𝐑𝐀𝐓𝐈𝐍𝐆**\n" +
+    "*𝐄𝐍𝐉𝐎𝐘 𝐔𝐒𝐈𝐍𝐆 𝐌𝐘 𝐁𝐎𝐓 𝐓𝐇𝐀𝐍𝐊𝐘𝐎𝐔𝐔𝐔! 🚀**";
   const photoUrl = 'https://i.ibb.co/svppp8bn/rikuuya.jpg';
   await bot.sendPhoto(chatId, photoUrl, { caption: welcomeText, parse_mode: 'Markdown' });
 });
@@ -147,7 +147,7 @@ bot.onText(/\/txt/, async (msg) => {
   }, { upsert: true });
 });
 
-bot.onText(/\/gettxtsites/, async (msg) => {
+bot.onText(/\/txtsites/, async (msg) => {
   const txtSites = `
 Free TXT Sites:
 - https://example1.com
@@ -161,11 +161,11 @@ Use these sites to find more TXT files.
 bot.onText(/\/help/, async (msg) => {
   const isAdmin = msg.from.id === ADMIN_ID;
   let helpMessage = `
-Available Commands:
-/start - Start bot and see welcome message
-/txt - Get your 1000 lines text file (once per day for free users)
-/gettxtsites - Get free TXT file source sites
-/help - Show this help message
+𝐀𝐕𝐀𝐈𝐋𝐀𝐁𝐋𝐄 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒:
+/start - 𝐓𝐎 𝐒𝐄𝐄 𝐓𝐇𝐄 𝐖𝐄𝐋𝐂𝐎𝐌𝐄 𝐌𝐄𝐒𝐒𝐀𝐆𝐄
+/txt - 𝐆𝐄𝐓 𝐘𝐎𝐔𝐑 1𝐊 𝐋𝐈𝐍𝐄𝐒 𝐓𝐗𝐓 𝐅𝐈𝐋𝐄 (once per day for free users)
+/txtsites - 𝐃𝐈𝐒𝐏𝐋𝐀𝐘 𝐖𝐇𝐄𝐑𝐄 𝐓𝐇𝐄 𝐓𝐗𝐓 𝐂𝐀𝐌𝐄 𝐅𝐑𝐎𝐌 
+/help - 𝐒𝐇𝐎𝐖 𝐓𝐇𝐈𝐒 𝐇𝐄𝐋𝐏 𝐌𝐄𝐒𝐒𝐀𝐆𝐄
 `;
 
   if (isAdmin) {
