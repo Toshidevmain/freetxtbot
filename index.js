@@ -63,13 +63,13 @@ function downloadFile(fileUrl) {
     }).on('error', reject);
   });
 }
-
 bot.onText(/\/txt/, async (msg) => {
   const userId = msg.from.id.toString();
   const now = new Date();
   const userData = await progressCollection.findOne({ user_id: userId }) || {};
   const isAdmin = userId === ADMIN_ID.toString();
   const isPremium = userData.is_premium  isAdmin  false;
+  const chunkId = userData.chunk_id || 0;
 
   if (!isPremium && userData.last_access) {
     const lastAccess = new Date(userData.last_access);
@@ -85,8 +85,7 @@ bot.onText(/\/txt/, async (msg) => {
     }
   }
 
-  const chunk = await collection.findOne({}, { sort: { chunk_id: 1 } });
-
+  const chunk = await collection.findOne({ chunk_id: chunkId });
   if (!chunk) {
     await bot.sendMessage(msg.chat.id, "No more text chunks available.", { parse_mode: 'Markdown' });
     return;
@@ -99,41 +98,17 @@ bot.onText(/\/txt/, async (msg) => {
   await bot.sendDocument(msg.chat.id, filePath);
   fs.unlinkSync(filePath);
 
-  await collection.deleteOne({ chunk_id: chunk.chunk_id });
-
   await progressCollection.updateOne(
     { user_id: userId },
     {
       $set: {
+        chunk_id: chunkId + 1,
         last_access: now,
         is_premium: isPremium
       }
     },
     { upsert: true }
   );
-});bot.on('document', async (msg) => {
-  const userId = msg.from.id;
-  if (userId !== ADMIN_ID || !uploadState.has(userId)) {
-    await bot.sendMessage(msg.chat.id, '**Unauthorized or /upload not used.**', { parse_mode: 'Markdown' });
-    return;
-  }
-  const doc = msg.document;
-  if (!doc.file_name.endsWith('.txt')) {
-    await bot.sendMessage(msg.chat.id, '**Only .txt files are allowed.**', { parse_mode: 'Markdown' });
-    return;
-  }
-  const fileId = doc.file_id;
-  const fileLink = await bot.getFileLink(fileId);
-  const fileBuffer = await downloadFile(fileLink);
-  const content = Buffer.from(fileBuffer).toString('utf-8');
-  const lines = content.split(/\r?\n/);
-  await collection.deleteMany({});
-  for (let i = 0; i < lines.length; i += 1000) {
-    const chunk = lines.slice(i, i + 1000);
-    await collection.insertOne({ chunk_id: Math.floor(i / 1000), lines: chunk });
-  }
-  uploadState.delete(userId);
-  await bot.sendMessage(msg.chat.id, `**File uploaded successfully with ${lines.length} lines.**`, { parse_mode: 'Markdown' });
 });
 
 
