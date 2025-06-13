@@ -1,17 +1,14 @@
-import dotenv from 'dotenv';
-dotenv.config();
-
 import TelegramBot from 'node-telegram-bot-api';
 import { MongoClient } from 'mongodb';
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import fetch from 'node-fetch';
+import https from 'https';
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const ADMIN_ID = Number(process.env.ADMIN_ID);
-const MONGO_URI = process.env.MONGO_URI;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
+const BOT_TOKEN = '7763399646:AAE2h_J58u8x05z161rCV44f0SDT0cdPHBc';
+const ADMIN_ID = 6186936436;
+const MONGO_URI = 'mongodb+srv://toshidev0:zcode22107@dbtxt.3dxoaud.mongodb.net/pyhost?retryWrites=true&w=majority';
+const ADMIN_TOKEN = 'yawara';
 
 const client = new MongoClient(MONGO_URI);
 await client.connect();
@@ -57,6 +54,16 @@ bot.onText(/\/upload/, async (msg) => {
   await bot.sendMessage(msg.chat.id, '**Send the .txt file now.**', { parse_mode: 'Markdown' });
 });
 
+function downloadFile(fileUrl) {
+  return new Promise((resolve, reject) => {
+    https.get(fileUrl, (res) => {
+      let data = [];
+      res.on('data', chunk => data.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(data)));
+    }).on('error', reject);
+  });
+}
+
 bot.on('document', async (msg) => {
   const userId = msg.from.id;
   if (userId !== ADMIN_ID || !uploadState.has(userId)) {
@@ -70,8 +77,7 @@ bot.on('document', async (msg) => {
   }
   const fileId = doc.file_id;
   const fileLink = await bot.getFileLink(fileId);
-  const response = await fetch(fileLink);
-  const fileBuffer = await response.arrayBuffer();
+  const fileBuffer = await downloadFile(fileLink);
   const content = Buffer.from(fileBuffer).toString('utf-8');
   const lines = content.split(/\r?\n/);
   await collection.deleteMany({});
@@ -175,7 +181,8 @@ Get premium for unlimited access by contacting admin.
   }
 
   await bot.sendMessage(msg.chat.id, helpMessage.trim(), { parse_mode: 'Markdown' });
-}); 
+});
+
 bot.on('callback_query', async (query) => {
   const userId = query.from.id.toString();
   if (query.data === 'check_remaining') {
